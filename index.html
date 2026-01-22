@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>תקציב ב-Google Sheets</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root { --primary-color: #0F9D58; --bg-color: #f8f9fa; } /* ירוק של גוגל שיטס */
+        body { font-family: 'Rubik', sans-serif; background-color: var(--bg-color); color: #202124; padding-bottom: 80px; }
+        .custom-card { background: #fff; border: none; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .summary-card { padding: 20px; border-radius: 12px; color: white; height: 100%; position: relative; overflow: hidden; }
+        .bg-balance { background: linear-gradient(135deg, #0F9D58 0%, #0B8043 100%); }
+        .bg-income { background: linear-gradient(135deg, #4285F4 0%, #1967D2 100%); }
+        .bg-expense { background: linear-gradient(135deg, #EA4335 0%, #D93025 100%); }
+        .hidden { display: none !important; }
+        .transaction-item { border-right: 4px solid #ddd; background: #fff; margin-bottom: 8px; padding: 12px; border-radius: 8px; }
+        .border-inc { border-right-color: #4285F4; }
+        .border-exp { border-right-color: #EA4335; }
+        .fab { display: none; }
+        @media (max-width: 768px) { .fab { display: flex; align-items: center; justify-content: center; position: fixed; bottom: 20px; left: 20px; width: 60px; height: 60px; border-radius: 50%; background-color: var(--primary-color); color: white; font-size: 24px; box-shadow: 0 4px 15px rgba(15, 157, 88, 0.4); z-index: 1000; border: none; } }
+    </style>
+</head>
+<body>
+
+<div id="loginScreen" class="container text-center mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <div class="custom-card p-5">
+                <i class="fa-solid fa-file-invoice-dollar fa-4x text-success mb-4"></i>
+                <h3 class="fw-bold mb-3">התקציב שלי</h3>
+                <p class="text-muted mb-4">האפליקציה מתחברת ישירות ל-Google Sheets שלך בצורה מאובטחת.</p>
+                <button id="authorize_button" class="btn btn-outline-dark w-100 py-2 fw-bold" onclick="handleAuthClick()">
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20" class="me-2">
+                    התחבר עם Google
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="appScreen" class="hidden">
+    
+    <nav class="navbar navbar-light bg-white shadow-sm mb-4">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#"><i class="fa-solid fa-table text-success me-2"></i>SheetsBudget</a>
+            <button class="btn btn-light btn-sm text-muted" onclick="handleSignoutClick()">התנתק</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="summary-card bg-balance">
+                    <small class="opacity-75">יתרה</small>
+                    <h2 class="fw-bold mb-0"><span id="displayBalance" dir="ltr">0</span> ₪</h2>
+                </div>
+            </div>
+            <div class="col-6 col-md-4">
+                <div class="summary-card bg-income">
+                    <small class="opacity-75">הכנסות</small>
+                    <h3 class="fw-bold mb-0"><span id="displayIncome" dir="ltr">0</span> ₪</h3>
+                </div>
+            </div>
+            <div class="col-6 col-md-4">
+                <div class="summary-card bg-expense">
+                    <small class="opacity-75">הוצאות</small>
+                    <h3 class="fw-bold mb-0"><span id="displayExpense" dir="ltr">0</span> ₪</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="custom-card p-4">
+                    <h5 class="fw-bold mb-3">הוספת שורה לשיטס</h5>
+                    <form id="budgetForm">
+                        <div class="mb-3">
+                            <div class="btn-group w-100">
+                                <input type="radio" class="btn-check" name="type" id="tExp" value="expense" checked onchange="toggleType()">
+                                <label class="btn btn-outline-danger" for="tExp">הוצאה</label>
+                                <input type="radio" class="btn-check" name="type" id="tInc" value="income" onchange="toggleType()">
+                                <label class="btn btn-outline-primary" for="tInc">הכנסה</label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <input type="text" class="form-control" id="desc" placeholder="תיאור (למשל: סופר)" required>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <input type="number" class="form-control" id="amount" placeholder="סכום" required step="0.1">
+                            </div>
+                            <div class="col-6">
+                                <select class="form-select" id="cat">
+                                    <option>מזון</option><option>רכב</option><option>דירה</option><option>שונות</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <input type="date" class="form-control" id="date" required>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100 fw-bold" id="submitBtn">שמור ב-Sheets</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <div class="custom-card p-4">
+                    <h6 class="fw-bold mb-3">נתונים מהגיליון (Live)</h6>
+                    <div id="list" style="max-height:400px; overflow-y:auto;">
+                        <div class="text-center mt-4"><div class="spinner-border text-success" role="status"></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <button class="fab" onclick="document.getElementById('amount').focus()"><i class="fa-solid fa-plus"></i></button>
+</div>
+
+<script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
+<script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
+
+<script>
+    // --- הגדרות (מלא את זה בשלב הבא) ---
+    const CLIENT_ID = 'הכנס_כאן_CLIENT_ID'; 
+    const API_KEY = 'הכנס_כאן_API_KEY'; 
+    const SPREADSHEET_ID = '1mwPHjuqia7YozE4MUA7Wk2SP1W1SWgCxC1pedX7WQ50'; // המזהה מה-URL של השיטס
+    
+    // הגדרות קבועות
+    const DISCOVERY_DOCS = ["https://sheets.googleapis.com/$discovery/rest?version=v4"];
+    const SCOPES = "https://www.googleapis.com/auth/spreadsheets";
+
+    let tokenClient;
+    let gapiInited = false;
+    let gisInited = false;
+
+    function gapiLoaded() {
+        gapi.load('client', intializeGapiClient);
+    }
+
+    async function intializeGapiClient() {
+        await gapi.client.init({ apiKey: API_KEY, discoveryDocs: DISCOVERY_DOCS });
+        gapiInited = true;
+        maybeEnableButtons();
+    }
+
+    function gisLoaded() {
+        tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: CLIENT_ID,
+            scope: SCOPES,
+            callback: '', // מוגדר בעת הלחיצה
+        });
+        gisInited = true;
+        maybeEnableButtons();
+    }
+
+    function maybeEnableButtons() {
+        if (gapiInited && gisInited) {
+            // בודק אם יש טוקן שמור (אופציונלי, כרגע נדרוש לחיצה)
+        }
+    }
+
+    function handleAuthClick() {
+        tokenClient.callback = async (resp) => {
+            if (resp.error) throw (resp);
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('appScreen').classList.remove('hidden');
+            loadSheetData(); // טעינת נתונים ראשונית
+        };
+
+        // אם המשתמש מחובר, הוא יבקש אישור, או יתחבר מיד אם אושר בעבר
+        if (gapi.client.getToken() === null) {
+            tokenClient.requestAccessToken({prompt: 'consent'});
+        } else {
+            tokenClient.requestAccessToken({prompt: ''});
+        }
+    }
+
+    function handleSignoutClick() {
+        const token = gapi.client.getToken();
+        if (token !== null) {
+            google.accounts.oauth2.revoke(token.access_token);
+            gapi.client.setToken('');
+            document.getElementById('appScreen').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+        }
+    }
+
+    // --- לוגיקה עסקית ---
+
+    async function loadSheetData() {
+        try {
+            // קריאה מהגיליון: מניחים שהמידע ב-Sheet1 בעמודות A עד E
+            const response = await gapi.client.sheets.spreadsheets.values.get({
+                spreadsheetId: SPREADSHEET_ID,
+                range: 'Sheet1!A2:E',
+            });
+
+            const rows = response.result.values;
+            renderData(rows);
+        } catch (err) {
+            console.error(err);
+            document.getElementById('list').innerText = 'שגיאה בטעינת נתונים (בדוק הרשאות)';
+        }
+    }
+
+    async function addRowToSheet(dataArray) {
+        try {
+            await gapi.client.sheets.spreadsheets.values.append({
+                spreadsheetId: SPREADSHEET_ID,
+                range: 'Sheet1!A:E',
+                valueInputOption: 'USER_ENTERED',
+                resource: { values: [dataArray] }
+            });
+            loadSheetData(); // רענון אחרי שמירה
+            alert("נשמר בהצלחה!");
+        } catch (err) {
+            console.error(err);
+            alert("שגיאה בשמירה: " + err.message);
+        }
+    }
+
+    // טיפול בטופס
+    document.getElementById('budgetForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const type = document.querySelector('input[name="type"]:checked').value;
+        const desc = document.getElementById('desc').value;
+        const amount = document.getElementById('amount').value;
+        const cat = document.getElementById('cat').value;
+        const date = document.getElementById('date').value;
+
+        // סדר העמודות בגיליון: תאריך, תיאור, קטגוריה, סכום, סוג
+        const row = [date, desc, cat, amount, type];
+        
+        // שליחה
+        addRowToSheet(row);
+        
+        // איפוס
+        document.getElementById('desc').value = '';
+        document.getElementById('amount').value = '';
+    });
+
+    // --- UI Helper Functions ---
+    function renderData(rows) {
+        const list = document.getElementById('list');
+        list.innerHTML = '';
+        
+        let income = 0, expense = 0;
+
+        if (!rows || rows.length === 0) {
+            list.innerHTML = '<div class="text-center text-muted">הגיליון ריק</div>';
+            return;
+        }
+
+        // מיון הפוך (חדש למעלה)
+        rows.reverse().forEach(row => {
+            // הנחה: row[0]=Date, row[1]=Desc, row[2]=Cat, row[3]=Amount, row[4]=Type
+            const amt = parseFloat(row[3]);
+            const type = row[4];
+            
+            if (type === 'income') income += amt; else expense += amt;
+
+            const isInc = type === 'income';
+            const colorClass = isInc ? 'border-inc' : 'border-exp';
+            
+            list.innerHTML += `
+                <div class="transaction-item ${colorClass} d-flex justify-content-between">
+                    <div><strong>${row[2]}</strong> <small class="text-muted">(${row[1]})</small></div>
+                    <div class="${isInc?'text-primary':'text-danger'} fw-bold" dir="ltr">${isInc?'+':'-'}${amt} ₪</div>
+                </div>
+            `;
+        });
+
+        document.getElementById('displayIncome').innerText = income;
+        document.getElementById('displayExpense').innerText = expense;
+        document.getElementById('displayBalance').innerText = income - expense;
+    }
+
+    function toggleType() {
+        const isInc = document.getElementById('tInc').checked;
+        const cat = document.getElementById('cat');
+        if(isInc) cat.innerHTML = '<option>משכורת</option><option>מתנה</option>';
+        else cat.innerHTML = '<option>מזון</option><option>רכב</option><option>דירה</option>';
+    }
+
+    // תאריך ברירת מחדל
+    document.getElementById('date').valueAsDate = new Date();
+
+</script>
+</body>
+</html>
