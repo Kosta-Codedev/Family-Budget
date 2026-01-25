@@ -89,7 +89,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
+            <!-- <div class="col-md-6">
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title text-center">מגמה חודשית</h5>
@@ -98,7 +98,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> -->
         </div>
 
         <div class="row">
@@ -287,33 +287,33 @@
                 }
             });
 
-            // הכנת נתונים לגרף עמודות
-            const monthlyTrend = {};
-            data.forEach(d => {
-                const m = d.date.split('/').slice(1).join('/');
-                if (!monthlyTrend[m]) monthlyTrend[m] = { income: 0, expense: 0 };
-                d.type === 'הכנסה' ? monthlyTrend[m].income += d.amount : monthlyTrend[m].expense += d.amount;
-            });
+            // // הכנת נתונים לגרף עמודות
+            // const monthlyTrend = {};
+            // data.forEach(d => {
+            //     const m = d.date.split('/').slice(1).join('/');
+            //     if (!monthlyTrend[m]) monthlyTrend[m] = { income: 0, expense: 0 };
+            //     d.type === 'הכנסה' ? monthlyTrend[m].income += d.amount : monthlyTrend[m].expense += d.amount;
+            // });
 
-            const ctxBar = document.getElementById('monthlyChart').getContext('2d');
-            if (monthlyChartInstance) monthlyChartInstance.destroy();
-            const sortedMonths = Object.keys(monthlyTrend).sort((a,b) => a.split('/').reverse().join('').localeCompare(b.split('/').reverse().join('')));
+            // const ctxBar = document.getElementById('monthlyChart').getContext('2d');
+            // if (monthlyChartInstance) monthlyChartInstance.destroy();
+            // const sortedMonths = Object.keys(monthlyTrend).sort((a,b) => a.split('/').reverse().join('').localeCompare(b.split('/').reverse().join('')));
             
-            monthlyChartInstance = new Chart(ctxBar, {
-                type: 'bar',
-                data: {
-                    labels: sortedMonths,
-                    datasets: [
-                        { label: 'הכנסות', data: sortedMonths.map(m => monthlyTrend[m].income), backgroundColor: '#4bc0c0' },
-                        { label: 'הוצאות', data: sortedMonths.map(m => monthlyTrend[m].expense), backgroundColor: '#ff6384' }
-                    ]
-                },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, // חובה כדי למנוע ריצוד!
-                    scales: { y: { beginAtZero: true } }
-                }
-            });
+            // monthlyChartInstance = new Chart(ctxBar, {
+            //     type: 'bar',
+            //     data: {
+            //         labels: sortedMonths,
+            //         datasets: [
+            //             { label: 'הכנסות', data: sortedMonths.map(m => monthlyTrend[m].income), backgroundColor: '#4bc0c0' },
+            //             { label: 'הוצאות', data: sortedMonths.map(m => monthlyTrend[m].expense), backgroundColor: '#ff6384' }
+            //         ]
+            //     },
+            //     options: { 
+            //         responsive: true, 
+            //         maintainAspectRatio: false, // חובה כדי למנוע ריצוד!
+            //         scales: { y: { beginAtZero: true } }
+            //     }
+            // });
         }
         
         document.getElementById('date').valueAsDate = new Date();
