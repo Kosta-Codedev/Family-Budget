@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.rtl.min.css" integrity="sha384-DOXMLfHhQkvFFp+rWTZwVlPVqdIhpDVYT9csOnHSgWQWPX0v5MCGtjCJbY6ERspU" crossorigin="anonymous">    
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #073B4C; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         .card { border: none; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .balance-card { color: white; }
         .bg-balance { background: linear-gradient(45deg, #11998e, #38ef7d); }
@@ -53,7 +53,7 @@
 
         <div class="row text-center">
             <div class="col-md-4">
-                <div class="card balance-card" style="background: #ff6b6b;">
+                <div class="card balance-card" style="background: #073B4C;">
                     <div class="card-body">
                         <h5>הוצאות</h5>
                         <h2 id="total-expense">₪0</h2>
@@ -104,7 +104,7 @@
         <div class="row">
             <div class="col-lg-4 mb-4">
                 <div class="card p-3">
-                    <h5 class="mb-3">הוספה חדשה</h5>
+                    <h5 class="mb-3">הזנת נתונים</h5>
                     <form id="budget-form" onsubmit="handleFormSubmit(event)">
                         <div class="btn-group w-100 mb-3" role="group">
                             <input type="radio" class="btn-check" name="type" id="type-expense" value="הוצאה" checked>
@@ -112,7 +112,7 @@
                             <input type="radio" class="btn-check" name="type" id="type-income" value="הכנסה">
                             <label class="btn btn-outline-primary" for="type-income">הכנסה</label>
                         </div>
-                        <input type="text" class="form-control mb-2" id="description" placeholder="תיאור" required>
+                        <input type="text" class="form-control mb-2" id="description" placeholder="תיאור">
                         <select class="form-select mb-2" id="category">
                             <option>סופר</option>
                             <option>חשבונות</option>
