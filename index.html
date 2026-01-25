@@ -15,11 +15,12 @@
         h1 { font-weight: 700; color: #333; }
         #auth-section { height: 100vh; display: flex; align-items: center; justify-content: center; background: #e9ecef; }
         
-        /* תיקון להבהוב המסך: קיבוע גובה לגרפים */
+        /* --- התיקון לריצוד --- */
         .chart-container {
             position: relative;
-            height: 300px;
+            height: 300px !important; /* גובה קבוע בכוח */
             width: 100%;
+            overflow: hidden; /* מונע גלישה החוצה */
         }
     </style>
 </head>
@@ -29,6 +30,7 @@
         <div class="text-center">
             <h1 class="mb-4">💰 המערכת של קוסטה</h1>
             <button class="btn btn-primary btn-lg px-5 shadow" onclick="handleAuthClick()">
+                <img src="https://www.svgrepo.com/show/475656/google-color.svg" width="20" style="margin-left:10px;">
                 התחבר עם Google
             </button>
         </div>
@@ -156,6 +158,7 @@
         let categoryChartInstance = null;
         let monthlyChartInstance = null;
 
+        // טעינת גוגל
         function gapiLoaded() { gapi.load('client', initializeGapiClient); }
         async function initializeGapiClient() {
             await gapi.client.init({ apiKey: API_KEY, discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"] });
@@ -178,6 +181,7 @@
             location.reload();
         }
 
+        // טעינת נתונים
         async function loadData() {
             try {
                 const response = await gapi.client.sheets.spreadsheets.values.get({
@@ -197,6 +201,7 @@
             } catch (err) { console.error(err); }
         }
 
+        // שמירת נתונים
         async function handleFormSubmit(e) {
             e.preventDefault();
             const date = new Date(document.getElementById('date').value).toLocaleDateString('en-GB');
@@ -216,6 +221,7 @@
             loadData();
         }
 
+        // ניהול פילטרים וגרפים
         function populateMonthFilter() {
             const filter = document.getElementById('monthFilter');
             const currentVal = filter.value;
@@ -263,20 +269,25 @@
         }
 
         function updateCharts(data) {
+            // הכנת נתונים לגרף עוגה
             const expensesByCategory = {};
             data.filter(d => d.type === 'הוצאה').forEach(d => expensesByCategory[d.category] = (expensesByCategory[d.category] || 0) + d.amount);
             
             const ctxPie = document.getElementById('categoryChart').getContext('2d');
             if (categoryChartInstance) categoryChartInstance.destroy();
             categoryChartInstance = new Chart(ctxPie, {
-                type: 'pie', // --- תוקן ל-PIE ---
+                type: 'pie', // עוגה רגילה
                 data: {
                     labels: Object.keys(expensesByCategory),
                     datasets: [{ data: Object.values(expensesByCategory), backgroundColor: ['#ff6384', '#36a2eb', '#ffce56', '#4bc0c0', '#9966ff', '#ff9f40'] }]
                 },
-                options: { responsive: true, maintainAspectRatio: false }
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, // חובה כדי למנוע ריצוד!
+                }
             });
 
+            // הכנת נתונים לגרף עמודות
             const monthlyTrend = {};
             data.forEach(d => {
                 const m = d.date.split('/').slice(1).join('/');
@@ -297,7 +308,11 @@
                         { label: 'הוצאות', data: sortedMonths.map(m => monthlyTrend[m].expense), backgroundColor: '#ff6384' }
                     ]
                 },
-                options: { responsive: true, maintainAspectRatio: false }
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, // חובה כדי למנוע ריצוד!
+                    scales: { y: { beginAtZero: true } }
+                }
             });
         }
         
